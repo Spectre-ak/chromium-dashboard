@@ -6,20 +6,21 @@
   height: auto;
   margin-bottom: 86px;
 
-  > section {
+  section {
     max-width: 600px;
     flex: 1 0 auto;
     margin-bottom: 15px;
 
     > div {
-      @include gradient-bar-bg;
-      background: rgba(255,255,255,0.8);
-      border-radius: $default-border-radius;
-      margin-top: 5px;
+      background: $card-background;
+      border: $card-border;
+      box-shadow: $card-box-shadow;
+      padding: 12px;
+      margin: 8px 0 16px 0;
     }
 
     > p {
-      color: #aaa;
+      color: #444;
     }
   }
 
@@ -38,15 +39,12 @@
 }
 
 .email {
-  white-space: pre-wrap;
-
   .help {
     font-style: italic;
     color: #aaa;
   }
 
-  label {
-    display: inline-block;
+  h4 {
     font-weight: 600;
   }
 }

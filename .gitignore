@@ -25,3 +25,9 @@ static/js/
 # OS files
 *.DS_Store
 
+# Test coverage tool
+.coverage
+htmlcov
+
+# venv directory
+cs-env

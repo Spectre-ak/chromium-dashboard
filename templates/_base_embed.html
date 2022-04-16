@@ -22,8 +22,6 @@ limitations under the License.
   <title>{% block page_title %}{% endblock %}{{ APP_TITLE }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
 
-  <link rel="manifest" href="/static/manifest.json">
-
   <meta name="theme-color" content="#366597">
   <link rel="icon" sizes="192x192" href="/static/img/crstatus_192.png">
 
@@ -37,7 +35,7 @@ limitations under the License.
   <link rel="shortcut icon" href="/static/img/crstatus_128.png">
 
   <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
-  
+
   {% block meta %}{% endblock %}
 
   <style>
@@ -66,7 +64,7 @@ limitations under the License.
   </style>
 
   {% block css %}{% endblock %}
-  
+
   <script src="https://unpkg.com/@webcomponents/webcomponentsjs/webcomponents-loader.js" defer></script>
   <script type="module">
     WebComponents.waitFor(() => {
@@ -90,10 +88,9 @@ limitations under the License.
 
   {% block js %}{% endblock %}
 
-  <script>
+  <script nonce="{{nonce}}">
     (function() {
       'use strict';
-      {% inline_file "/static/js/service-worker-registration.min.js" %}
       {% inline_file "/static/js/shared.min.js" %}
     })();
   </script>

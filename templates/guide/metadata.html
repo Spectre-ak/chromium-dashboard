@@ -1,62 +1,130 @@
-<section id="metadata">
+<section id="metadata"
+         {% if offer_editing == "no" %}
+           style="max-width: var(--max-content-width)"
+         {% endif %}
+         >
 
   <div id="metadata-readonly">
     <div style="margin-bottom: 1em">
-        <div id="metadata-buttons" style="float: right">
-          <a id="open-metadata">Edit</a>
-          {% if user.is_admin %}
-            <div><a id="delete-feature"
-                    data-id="{{ feature_id }}"
-                    class="delete-button"
-                    >Delete</a></div>
-          {% endif %}
-        </div>
-      <div style="width:60em">{{ feature.summary }}</div>
+        {% if offer_editing == "yes" %}
+          <div id="metadata-buttons" style="float: right">
+            <a id="open-metadata">Edit</a>
+            {% if user.is_admin %}
+              <div><a id="delete-feature"
+                      data-id="{{ feature_id }}"
+                      class="delete-button"
+                      >Delete</a></div>
+            {% endif %}
+          </div>
+        {% endif %}
+          <div
+               {% if offer_editing == "no" %} class="preformatted" {% endif %}
+               >{{ feature.summary | urlize }}</div>
     </div>
-    <div>Category: {{ feature.category }}</div>
+
     {% if feature.unlisted %}
-    <div>This feature is only shown in the feature list
-         to users who with edit access.</div>
+      <div style="padding: 8px">
+        This feature is only shown in the feature list
+        to users who with edit access.
+      </div>
     {% endif %}
-    <div>Owners: 
-      {% for owner in feature.owner %}
-        <a href="mailto:{{ owner }}">{{ owner }}</a>
-      {% endfor %}
-    </div>
-    <div>Feature type: {{ feature.feature_type }}</div>
-    <div>Feature stage: {{ feature.intent_stage }}</div>
-    <div>Blink components: {{ feature.blink_components | join:', ' }}</div>
-    <div>Tracking bug:
-      {% if feature.bug_url %}
-        <a href="{{ feature.bug_url }}">{{ feature.bug_url }}</a>
-      {% else %}
-        None
-      {% endif %}
-    </div>
-    <div>Launch bug:
-      {% if feature.launch_bug_url %}
-        <a href="{{ feature.launch_bug_url }}">{{ feature.launch_bug_url }}</a>
-      {% else %}
-        None
-      {% endif %}
-    </div>
-    <div>Status in Chromium: {{ feature.impl_status_chrome }}</div>
-    <div>Search tags: {{ feature.search_tags | join:', ' }}</div>
+
+    <div class="flex-cols">
+
+    <table class="property-sheet">
+      <tr>
+        <th>Owners</th>
+        <td>
+          {% for owner in feature.browsers.chrome.owners %}
+            <a href="mailto:{{ owner }}">{{ owner }}</a>
+          {% endfor %}
+        </td>
+      </tr>
+
+      <tr>
+        <th>Category</th>
+        <td>{{ feature.category }}</td>
+      </tr>
+
+      <tr>
+        <th>Feature type</th>
+        <td>{{ feature.feature_type }}</td>
+      </tr>
+
+      <tr>
+        <th>Process stage</th>
+        <td>{{ feature.intent_stage }}</td>
+      </tr>
+      <tr>
+        <th>Search tags</th>
+        <td>
+          {% for tag in feature.tags %}
+            <a href="/features#tags:{{tag}}"
+               >{{tag}}</a><span class="conditional-comma">, </span>
+          {% endfor %}
+        </td>
+      </tr>
+    </table>
+
+
+    <table class="property-sheet">
+      <tr>
+        <th>Implementation status</th>
+        <td>{{ feature.browsers.chrome.status.text }}</td>
+      </tr>
+
+      <tr>
+        <th>Blink components</th>
+        <td>{{ feature.browsers.chrome.blink_components | join:', ' }}</td>
+      </tr>
+
+      <tr>
+        <th>Tracking bug</th>
+        <td>
+          {% if feature.browsers.chrome.bug %}
+            <a href="{{ feature.browsers.chrome.bug }}">{{ feature.browsers.chrome.bug }}</a>
+          {% else %}
+            None
+          {% endif %}
+         </td>
+      </tr>
+
+      <tr>
+        <th>Launch bug</th>
+        <td>
+          {% if feature.launch_bug_url %}
+            <a href="{{ feature.launch_bug_url }}">{{ feature.launch_bug_url }}</a>
+          {% else %}
+            None
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+
+    </div> <!-- flex-cols -->
+
   </div>
 
-  <div id="metadata-editing" style="display:none">
-    <form name="overview_form" method="POST" action="/guide/stage/{{ feature_id }}/0">
-      <table>
-        {{ overview_form }}
+  {% if offer_editing == "yes" %}
+    <div id="metadata-editing" style="display:none">
+      <form name="overview_form" method="POST" action="/guide/stage/{{ feature_id }}/0">
+        <input type="hidden" name="token" value="{{xsrf_token}}">
+        <input type="hidden" name="form_fields"
+               value="{{ overview_form.fields.keys | join:',' }}" >
 
-        <tr>
-          <th></th>
-          <td>
-            <input class="button" type="submit" value="Submit">
-            <button id="close-metadata">Cancel</button>
-          </td>
-        </tr>
-      </table>
-    </form>
-  </div>
+        <table>
+          {{ overview_form }}
+
+          <tr>
+            <th></th>
+            <td>
+              <input class="button" type="submit" value="Submit">
+              <button id="close-metadata" type="reset">Cancel</button>
+            </td>
+          </tr>
+        </table>
+      </form>
+    </div>
+  {% endif %}
+
 </section>

@@ -1,22 +1,39 @@
 Chrome Platform Status
 ==================
 
-[![Lighthouse score: 100/100](https://lighthouse-badge.appspot.com/?score=100&category=PWA)](https://github.com/ebidel/lighthouse-badge)
+### Mission
 
-[chromestatus.com](http://chromestatus.com/)
+[chromestatus.com](https://chromestatus.com/) is the official tool used for for tracking feature launches in Blink (the browser engine that powers Chrome and many other web browsers).  This tool guides feature owners through our [launch process](https://www.chromium.org/blink/launching-features/) and serves as a primary source for developer information that then ripples throughout the web developer ecosystem.
 
 ### Get the code
 
-    git clone --recursive https://github.com/GoogleChrome/chromium-dashboard
+    git clone https://github.com/GoogleChrome/chromium-dashboard
 
 ### Installation
+1. Before you begin, make sure that you have a java JRE (version 8 or greater) installed. JRE is required to use the DataStore Emulator.
+1. Install global CLIs in the home directory
+    1. [Google App Engine SDK for Python](https://cloud.google.com/appengine/docs/standard/python3/setting-up-environment). Make sure to select Python 3.
+    1. pip, node, npm, and gunicorn.
+    1. Gulp `npm install --global gulp-cli`
+1. We recommend using an older node version, e.g. node 10
+    1. Use `node -v` to check the default node version
+    2. `nvm use 12` to switch to node 12
+3. `cd` into the Chromestatus repo and install npm dependencies `npm ci`
+4. Create a virtual environment.
+    1. `sudo apt install python3.9-venv`
+    1. `python3 -m venv cs-env`
+5. Install pip for python2
+    1. curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
+    1. python2 get-pip.py
+6. Install other dependencies
+    1. `npm run deps`
+    1. `npm run dev-deps`
 
-1. Install global CLIs
-    1. [Google App Engine SDK for Python](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python).
-    1. pip, node, npm.
-    1. Gulp `npm install -g gulp`
-1. Install npm dependencies `npm ci`
-1. Install other dependencies `npm run deps`
+You will need to activate the venv in every shell that you use.
+1. `source cs-env/bin/activate`
+
+
+If you encounter any error during the installation process, the section **Notes** (later in this README.md) may help.
 
 ##### Add env_vars.yaml
 
@@ -25,10 +42,8 @@ Create a file named `env_vars.yaml` in the root directory and fill it with:
 ```yaml
 env_variables:
   DJANGO_SETTINGS_MODULE: 'settings'
-  FIREBASE_SERVER_KEY: <SERVER_KEY>
+  DJANGO_SECRET: 'this-is-a-secret'
 ```
-
-The `FIREBASE_SERVER_KEY` is the Firebase server key obtained from the [Firebase console](https://firebase.corp.google.com/project/cr-status/settings/cloudmessaging/).
 
 ### Developing
 
@@ -37,6 +52,7 @@ To start the main server and the notifier backend, run:
 ```bash
 npm start
 ```
+Then visit `http://localhost:8080/`.
 
 To start front end code watching (sass, js lint check, babel, minify files), run
 
@@ -53,28 +69,26 @@ npm run lint
 To run unit tests:
 
 ```bash
-npm run test
+npm test
 ```
 
-Note: featurelist is temporarily excluded because lit-analyzer throws `Maximum call stack size exceeded`.
+This will start a local datastore emulator, run unit tests, and then shut down the emulator.
 
 There are some developing information in developer-documentation.md.
 
-##### FCM setup
-
-If you want to test push notification features, you'll need to create a file named
-`.fcm_server_key` in the main project root. Copy in the FCM server key obtained
-from the [Firebase console](https://firebase.corp.google.com/project/cr-status/settings/cloudmessaging/).
-
-When `./scripts/start_server.sh` is run, it will populate this value as an environment variable.
 
 **Notes**
 
-- Locally, the `/feature` list pulls from prod (https://www.chromestatus.com/features.json). Opening one of the features will 404 because the entry is not actually in the local db. If you want to test local entries, modify [`templates/features.html`](https://github.com/GoogleChrome/chromium-dashboard/blob/0b3e3eb444f1e6b6751140f9524a2f60cdc2ca5d/templates/features.html#L181-L182) to pull locally and add some db entries by signing in to the app (bottom link). Make sure to check the "sign in as admin" box when doing so. Note that you can also simply go to `http://127.0.0.1:8080/` instead of `localhost` to pull locally.
+- If you get an error saying `No module named protobuf` or `No module named six` or `No module named enum` , try installing them locally with `pip install six enum34 protobuf`.
+
+- When installing the GAE SDK, make sure to get the version for python 3.
+
+- If you run the server locally, and then you are disconnected from your terminial window, the jobs might remain running which will prevent you from starting the server again.  To work around this, use `ps aux | grep gunicorn` and then use the unix `kill -9` command to terminate those jobs.
+
 
 #### Blink components
 
-Chromestatus gets the list of Blink components from a separate [app running on Firebase](https://blinkcomponents-b48b5.firebaseapp.com/blinkcomponents). See [source](https://github.com/ebidel/blink-components).
+Chromestatus currently gets the list of Blink components from the file `hack_components.py`.
 
 #### Seed the blink component owners
 
@@ -85,29 +99,37 @@ Visit http://localhost:8080/admin/blink/populate_blink to see the list of Blink 
 [`settings.py`](https://github.com/GoogleChrome/chromium-dashboard/blob/master/settings.py) contains a list
 of globals for debugging and running the site locally.
 
-`SEND_EMAIL` - `False` will turn off email notifications to feature owners.
-
-`SEND_PUSH_NOTIFICATIONS` - `False` will turn off sending push notifications for all users.
-
 ### Deploying
 
-**Note** you need to have admin privileges on the `cr-status` cloud project to be
-able to deploy the site.
+If you have uncommited local changes, the appengine version name will end with `-tainted`.
+It is OK to test on staging with tainted versions, but everything should be committed
+(and thus not tainted) before staging a version that can later be pushed to prod.
 
-Run the helper script:
+**Note** you need to have admin privileges on the `cr-status-staging` and `cr-status`
+cloud projects to be able to deploy the site.
 
-    ./scripts/deploy_site.sh <YYYY-MM-DD>
+Run the npm target:
 
-Where `<YYYY-MM-DD>` is today's date, which will be used as the deployment's version
-number. This will build the site and deploy it to GAE.
+    npm run staging
 
-Lastly, open the [Google Developer
-Console](https://console.cloud.google.com/appengine/versions?project=cr-status&organizationId=433637338589&moduleId=default)
+Open the [Google Developer
+Console for the staging site](https://console.cloud.google.com/appengine/versions?project=cr-status-staging)
 and flip to the new version by selecting from the list and clicking *MIGRATE TRAFFIC*. Make sure to do this for both the 'default' service as well as for the 'notifier' service.
+
+Each deployment also uploads the same code to a version named `rc` for "Release candidate".  This is the only version that you can test using Google Sign-In at `https://rc-dot-cr-status-staging.appspot.com`.
+
+If manual testing on the staging server looks good, then repeat the same steps to deploy to prod:
+
+    npm run deploy
+
+Open the [Google Developer
+Console for the production site](https://console.cloud.google.com/appengine/versions?project=cr-status)
+
+The production site should only have versions that match versions on staging.
 
 ### LICENSE
 
-Copyright (c) 2013-2016 Google Inc. All rights reserved.
+Copyright (c) 2013-2022 Google Inc. All rights reserved.
 
 Apache2 License.
 

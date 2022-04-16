@@ -1,12 +1,9 @@
-import {LitElement, html} from 'lit-element';
-import {nothing} from 'lit-html';
-import '@polymer/iron-icon';
+import {LitElement, css, html, nothing} from 'lit';
 import './chromedash-color-status';
-import style from '../css/elements/chromedash-legend.css';
+import './chromedash-dialog';
+import {SHARED_STYLES} from '../sass/shared-css.js';
 
 class ChromedashLegend extends LitElement {
-  static styles = style;
-
   static get properties() {
     return {
       opened: {type: Boolean, reflect: true},
@@ -14,9 +11,66 @@ class ChromedashLegend extends LitElement {
     };
   }
 
-  toggle() {
-    this.opened = !this.opened;
-    document.body.style.overflow = this.opened ? 'opened' : '';
+  static get styles() {
+    return [
+      ...SHARED_STYLES,
+      css`
+      h3 {
+        border-bottom: var(--heading-underbar);
+        padding: 0 !important;
+      }
+
+      ul {
+        margin: 0 0 15px 0;
+      }
+
+      ul > li {
+        margin: 5px 0;
+      }
+
+      label {
+        font-weight: 500;
+        text-transform: uppercase;
+      }
+
+      section {
+        margin-top: 10px;
+      }
+      section.views {
+        display: flex;
+      }
+      section.views > div {
+        flex: 1 0 0;
+      }
+      section.views li > span {
+        margin-left: 3px;
+      }
+
+      .queries li span {
+        margin-right: 5px;
+        width: 260px;
+        display: inline-block;
+      }
+
+      p {
+        margin-top: 5px;
+      }
+
+      @media only screen and (min-width: 701px) {
+        #overlay {
+          width: 80vw;
+          max-height: 80vh;
+        }
+      }
+    `];
+  }
+
+  open() {
+    this.shadowRoot.querySelector('chromedash-dialog').open();
+  }
+
+  close() {
+    this.shadowRoot.querySelector('chromedash-dialog').close();
   }
 
   render() {
@@ -24,7 +78,7 @@ class ChromedashLegend extends LitElement {
       return nothing;
     }
     return html`
-      <div id="overlay">
+      <chromedash-dialog>
         <h3>About the data</h3>
         <section class="content-wrapper">
           <p class="description">What you're looking at is a mostly
@@ -33,15 +87,12 @@ class ChromedashLegend extends LitElement {
           added. Features marked "No active development" are being considered or
           have yet to be started. Features marked "In development" are currently
           being worked on.</p>
-          <button class="close buttons" @click=${this.toggle}>
-            <iron-icon icon="chromestatus:close"></iron-icon>
-          </button>
         </section>
         <h3>Color legend</h3>
         <p>Colors indicate the "interoperability risk" for a given feature. The
           risk increases as
           <chromedash-color-status value="0"
-              .max="${this.views.vendors.length}"></chromedash-color-status> → 
+              .max="${this.views.vendors.length}"></chromedash-color-status> →
           <chromedash-color-status .value="${this.views.vendors.length}"
               .max="${this.views.vendors.length}"></chromedash-color-status>, and the
           color meaning differs for browser vendors, web developers, and the
@@ -111,7 +162,7 @@ class ChromedashLegend extends LitElement {
             </li>
           </ul>
         </section>
-      </div>
+      </chromedash-dialog>
     `;
   }
 }

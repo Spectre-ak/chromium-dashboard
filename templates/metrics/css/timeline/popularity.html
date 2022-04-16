@@ -25,17 +25,17 @@
   <chromedash-timeline
       type="css" view="popularity"
       title="Percentage of Chrome page loads that use this property at least once"
-      {% if prod %}prod{% endif %}></chromedash-timeline>
+      ></chromedash-timeline>
   <p class="callout">
     <b>Note</b>: on 2017-10-26 the underlying metrics were switched over to a newer collection system
-    which is <a href="https://groups.google.com/a/chromium.org/forum/#!msg/blink-api-owners-discuss/IpIkbz0qtrM/HUCfSMv2AQAJ" target="_blank">more accurate</a>.
+    which is <a href="https://groups.google.com/a/chromium.org/forum/#!msg/blink-api-owners-discuss/IpIkbz0qtrM/HUCfSMv2AQAJ" target="_blank" rel="noopener">more accurate</a>.
     This is also the reason for the abrupt spike around 2017-10-26.
   </p>
 </div>
 {% endblock %}
 
 {% block js %}
-<script>
+<script nonce="{{nonce}}">
   (function() {
     'use strict';
     // Get values from server. used in /static/js/metrics-timeline-page.js

@@ -1,6 +1,8 @@
 {% extends "_base.html" %}
 {% load inline_file %}
 
+{% block page_title %}{{ feature.name }} - {% endblock %}
+
 {% block css %}
 <!-- <link rel="stylesheet" href="/static/css/forms.css"> -->
 <!-- <link rel="stylesheet" href="/static/css/features/launch.css"> -->
@@ -18,10 +20,28 @@
 
 {% block content %}
 
+{% if feature.unlisted %}
+<div class="alertbox">
+  Important: This feature is currently unlisted.  Please only share
+  feature details with people who are collaborating with you on
+  the feature.
+</div>
+{% endif %}
+
 {% if launch %}
 <section>
 <h3>Click through this link to file a launch-tracking bug</h3>
   {% include "blink/launch_bug.html" %}
+</section>
+{% endif %}
+
+{% if intent %}
+<section>
+<h3>Reach out to a spec mentor</h3>
+<p style="margin-left: 1em">
+  Consider showing your draft intent email to your spec mentor or
+  sending it to spec-mentors@chromium.org.  They can help make sure
+  that your intent email is ready for review.</p>
 </section>
 {% endif %}
 
@@ -32,30 +52,37 @@
 </section>
 {% endif %}
 
-{% if feature.intent_stage == "Ship" %}
+{% if 'need_api_owners_lgtms' in sections_to_show %}
 <section>
 <h3>Obtain LGTMs from 3 API Owners</h3>
-<span class="help">Given the intent stage of this feature is "{{feature.intent_stage}}" that means you're now done with your experimentation and implementation, and have documented that in this feature description. Now you need to get 3 API Owners to respond to your message with LGTMs. Once you have that, you're cleared from the Blink Launch process perspective to ship your feature.
-</section>
-{% elif feature.intent_stage == "Implement and Ship" %}
-<section>
-<h3>Obtain LGTMs from 3 API Owners</h3>
-<span class="help">Given the intent stage of this feature is "{{feature.intent_stage}}" that means this is a small change and you’d like to ship enabled-by-default immediately. Per <a href="http://www.chromium.org/blink#launch-process">the launch process for new features</a>, you’ll now need 3 LGTMs from API OWNERS before shipping.
+<span class="help">
+  You will need three LGTMs from API owners.
+According to the
+<a href="http://www.chromium.org/blink#launch-process">Blink Launch process</a>
+after that, you're free to ship your feature.
+</span>
 </section>
 {% endif %}
-</span>
 
 {% endblock %}
 
 {% block js %}
-<script>
+<script nonce="{{nonce}}">
 // Remove loading spinner at page load.
-document.body.classList.remove('loading');
+  document.body.classList.remove('loading');
 
-setTimeout(function() {
+  const copyEmailBodyEl = document.querySelector('#copy-email-body');
+  const emailBodyEl = document.querySelector('.email');
   const toastEl = document.querySelector('chromedash-toast');
-  toastEl.showMessage('Your feature was saved! It may take a few minutes to ' +
-                    'show up in the main list.', null, null, -1);
-}, 500);
+  if (copyEmailBodyEl && emailBodyEl) {
+      copyEmailBodyEl.addEventListener('click', () => {
+          window.getSelection().removeAllRanges();
+          const range = document.createRange();
+          range.selectNode(emailBodyEl);
+          window.getSelection().addRange(range);
+          document.execCommand('copy');
+          toastEl.showMessage('Email body copied');
+      });
+  }
 </script>
 {% endblock %}

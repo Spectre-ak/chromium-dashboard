@@ -5,11 +5,9 @@ html, body {
 }
 
 body {
-  color: $default-font-color;
-  font: 14px "Roboto", sans-serif;
-  font-weight: 400;
-  -webkit-font-smoothing: antialiased;
-  background-color: $light-grey;
+  color: var(--default-color);
+  font: var(--default-font);
+  background: var(--page-background);
 
   &.loading {
     #spinner {
@@ -26,8 +24,8 @@ body {
   align-items: center;
   justify-content: center;
   position: fixed;
-  height: calc(100% - 54px - $header-height); // 100% - height of footer + header.
-  max-width: $max-content-width;
+  height: 60%; // Centered, half that.
+  max-width: var(--max-content-width);
   width: 100%;
 }
 
@@ -49,9 +47,7 @@ body {
   box-shadow: inset 0px 5px 6px -3px rgba(0, 0, 0, 0.4);
 
   iron-icon {
-    margin-right: $content-padding / 4;
-    height: 20px;
-    width: 20px;
+    margin-right: var(--content-padding-half);
   }
 
   a {
@@ -67,6 +63,7 @@ app-drawer {
     height: 100%;
     overflow: auto;
     padding: $content-padding;
+    background: $page-background;
   }
 
   paper-listbox {
@@ -79,7 +76,6 @@ app-drawer {
 
   h3 {
     margin-bottom: $content-padding;
-    text-transform: uppercase;
     font-weight: 500;
     font-size: 14px;
     color: inherit;
@@ -87,31 +83,29 @@ app-drawer {
 }
 
 app-header {
-  background-color: $light-grey;
   right: 0;
   top: 0;
   left: 0;
   z-index: 1;
+}
 
-  &[fixed] {
-    position: fixed;
-  }
+app-header-layout {
+  flex: 1;
 }
 
 .main-toolbar {
   display: flex;
   position: relative;
-  padding: 0 $content-padding;
-}
-
-header, footer {
-  display: flex;
-  align-items: center;
-  text-shadow: 0 1px 0 white;
+  padding: 0;
 }
 
 header {
+  display: flex;
+  align-items: baseline;
   user-select: none;
+  background: var(--card-background);
+  border-bottom: var(--card-border);
+  box-shadow: var(--card-box-shadow);
 
   a {
     text-decoration: none !important;
@@ -119,30 +113,37 @@ header {
 
   nav {
     display: flex;
+    flex: 1;
     align-items: center;
-    margin-left: $content-padding;
+    margin: 0 var(--content-padding);
     -webkit-font-smoothing: initial;
 
     a {
-      @include gradient-bar-bg;
       cursor: pointer;
-      font-size: 16px;
+      font-size: var(--nav-link-font-size);
       text-align: center;
-      border-radius: $default-border-radius;
-      border-bottom: 1px solid $bar-border-color;
-      border-right: 1px solid $bar-border-color;
+      padding: var(--content-padding-half) var(--content-padding);
+      color: var(--nav-link-color);
       white-space: nowrap;
+      border-bottom: var(--nav-link-border);
 
-      &:active {
-        position: relative;
-        top: 1px;
-        left: 1px;
-        box-shadow: 3px 3px 4px $bar-shadow-color;
+      &:hover {
+        color: black;
+        background: var(--nav-link-hover-background);
       }
 
       &.disabled {
         opacity: 0.5;
         pointer-events: none;
+      }
+    }
+
+    .active {
+      color: var(--nav-link-active-color);
+      border-bottom: var(--nav-link-active-border);
+
+      a {
+        color: var(--nav-link-active-color);
       }
     }
 
@@ -156,6 +157,9 @@ header {
         left: 0;
         list-style: none;
         z-index: 1;
+        background: var(--card-background);
+        border-bottom: var(--card-border);
+        box-shadow: var(--card-box-shadow);
       }
 
       a {
@@ -172,21 +176,14 @@ header {
   aside {
     $logoSize: 32px;
 
-    @include gradient-bar-bg;
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
-    border-bottom: 1px solid $bar-border-color;
-    border-right: 1px solid $bar-border-color;
-
     background: url(/static/img/chrome_logo.svg) no-repeat $content-padding 50%;
     background-size: $logoSize;
-    background-color: #fafafa;
-    padding: 0.75em 1em;
+    padding: 0.75em 2em;
     padding-left: $logoSize + $content-padding  + $content-padding / 2;
 
     hgroup {
       a {
-        color: currentcolor;
+        color: var(--logo-color);
       }
     }
 
@@ -202,21 +199,21 @@ header {
 }
 
 footer {
-  @include gradient-bar-bg;
-  font-size: 12px;
-  box-shadow: 0 -2px 5px $bar-shadow-color;
+  background: var(--footer-background);
+  box-shadow: 0 -2px 5px var(--shadow-color);
   display: flex;
   flex-direction: column;
   justify-content: center;
   text-align: center;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 3;
+  align-items: center;
+  margin-top: 2em;
+  padding: var(--content-padding-half);
 
   div {
-    margin-top: $content-padding / 4;
+    > * + * {
+      margin-left: var(--content-padding);
+      padding-left: var(--content-padding);
+    }
   }
 }
 
@@ -224,11 +221,16 @@ footer {
   line-height: 1.4;
 }
 
+.sub-nav-links {
+  padding-left: var(--content-padding-quarter);
+  padding-right: var(--content-padding-quarter);
+}
+
 #subheader, .subheader {
   display: flex;
   align-items: center;
-  margin: $content-padding 0;
-  max-width: $max-content-width;
+  margin: var(--content-padding) 0;
+  max-width: var(--max-content-width);
   width: 100%;
 
   .num-features {
@@ -241,7 +243,6 @@ footer {
 
       input {
         width: 280px;
-        outline: none;
         padding: 10px 7px;
       }
     }
@@ -252,8 +253,8 @@ footer {
       flex: 1 0 auto;
 
       .blue-button {
-        background: $material-primary-button;
-        color: #fff;
+        background: var(--primary-button-background);
+        color: var(--primary-button-color);
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -262,15 +263,14 @@ footer {
         -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
         -webkit-tap-highlight-color: transparent;
         text-decoration: none;
-        border-radius: 3px;
+        border: var(--button-border);
+        border-radius: var(--button-border-radius);
         user-select: none;
         cursor: pointer;
         padding: 0.7em 0.57em;
 
         iron-icon {
           margin-right: $content-padding / 4;
-          height: 18px;
-          width: 18px;
         }
       }
 
@@ -290,10 +290,32 @@ footer {
   width: 100%;
 }
 
-#content {
-  margin: $content-padding 6px;
-  position: relative;
+
+#app-content-container {
+  display: flex;
+  flex-direction: column;
   height: 100%;
+}
+
+#content {
+  margin: var(--content-padding);
+  position: relative;
+}
+
+#column-container {
+   display: flex;
+   align-items: stretch;
+   flex-direction: row;
+ }
+
+#drawer-column {
+  padding: 1em 2em 1em 1em;
+  margin-left: 8px;
+}
+
+#content-column {
+  flex: 1;
+  padding-left: 2em;
 }
 
 #panels {
@@ -302,17 +324,23 @@ footer {
   overflow: hidden;
 }
 
+
+.alertbox {
+  margin: 2em;
+  padding: 1em;
+  background: var(--warning-background);
+  color: var(--warning-color);
+}
+
 @media only screen and (min-width: 701px) {
   .main-toolbar {
     .toolbar-content {
-      max-width: $max-content-width;
       width: 100%;
     }
   }
   // Overrides styles set by app-header-layout so there's no visual
   // layout FOUC/jump as the drawer panel upgrades.
   app-header {
-    padding-left: $app-drawer-width;
     left: 0 !important;
   }
 }
@@ -331,10 +359,6 @@ footer {
     .main-toolbar {
       padding: 0;
       display: block;
-
-      iron-icon {
-        width: 24px;
-      }
     }
   }
 
@@ -347,6 +371,15 @@ footer {
     margin-right: 0;
   }
 
+
+  #column-container {
+    flex-direction: column;
+  }
+  #content-column {
+    padding-left: var(--content-padding-half);
+    padding-right: var(--content-padding-half);
+  }
+
   header {
     $logoSize: 24px;
 
@@ -354,24 +387,17 @@ footer {
     display: block;
     aside {
       display: flex;
-      padding: $content-padding / 2;
+      padding: var(--content-padding-half);
       border-radius: 0;
-      background-size: $logoSize;
-      background-position: $content-padding + 8 + $logoSize 50%;
+      background: inherit;  // no logo
 
-      hgroup {
-        padding-left: $content-padding + 8 + $logoSize;
-        span {
-          display: none;
-        }
-      }
     }
     nav {
       margin: 0;
       justify-content: center;
       flex-wrap: wrap;
       a {
-        padding: 5px 10px;
+        padding: var(--content-padding-half) var(--content-padding);
         margin: 0;
         border-radius: 0;
         flex: 1 0 auto;
@@ -388,20 +414,24 @@ footer {
 
   .subheader {
     .description {
-      margin: 0 $content-padding;
+      margin: 0 var(--content-padding);
     }
   }
 
   #subheader {
     div {
-      &:not(.search):not(.actionlinks) {
+      &:not(.search):not(.actionlinks):not(.tooltips) {
         display: none;
       }
 
       &.search {
         text-align: center;
-        flex: 1 0 0;
+        min-width: 0;
         margin: 0;
+
+        input {
+          width: auto;
+        }
       }
     }
   }
@@ -413,20 +443,19 @@ footer {
     margin: 0;
   }
 
-  #a2hs-button.available {
-    display: flex !important;
-    justify-content: center;
-    align-items: center;
-    margin-top: $content-padding / 2;
+  //Vertical Sub-Nav should not be visible in narrow view ports
+  .metric-nav{display: none}
+  #drawer-column{padding: 0em;}
 
-    &::after {
-      content: 'Install app';
-      text-transform: uppercase;
-      font-weight: 600;
-      margin-left: $content-padding / 2;
-    }
-  }
 }
+
+//Horizontal Sub-Nav should not be visible in wider view ports
+@media only screen and (min-width: 700px){
+  #horizontal-sub-nav{display: none}
+
+}
+
+
 
 // When banner doesn't block navigation buttons.
 @media only screen and (min-width: 1100px) {
@@ -435,28 +464,39 @@ footer {
   }
 }
 
-#a2hs-button {
-  display: none;
-  margin-left: $content-padding / 2;
-
-  &.available {
-    display: inline-block;
-  }
-
-  &.disabled {
-    opacity: 0.5;
-  }
-
-  img {
-    height: 24px;
-    width: 24px;
-  }
-}
-
-@media all and (display-mode: standalone) {
-  #a2hs-button {
-    display: none;
-  }
-}
-
 @import 'fouc';
+
+.flex-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.flex-container-outer {
+	flex-wrap: wrap;
+  width: 100%;
+}
+
+@media only screen and (max-width: 700px) {
+	.flex-container-inner-first {
+  	justify-content: space-between;
+    width: 100%;
+  }
+
+  .flex-item {
+    padding-left: 0px;
+    padding-right: 0px;
+    flex: 1 0 auto;
+  }
+
+  .flex-item-inner {
+    padding-left: 0px;
+    padding-right: 0px;
+    text-align: center;
+    flex: 0 1 auto;
+  }
+
+  .flex-container-inner-second {
+    justify-content: center;
+    width: 100%;
+  }
+}

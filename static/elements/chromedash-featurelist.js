@@ -1,18 +1,18 @@
-import {LitElement, html} from 'lit-element';
+import {LitElement, html} from 'lit';
 // eslint-disable-next-line no-unused-vars
 import './chromedash-feature';
-import style from '../css/elements/chromedash-featurelist.css';
+import {FEATURELIST_CSS} from '../sass/elements/chromedash-featurelist-css.js';
 
 const MAX_FEATURES_SHOWN = 500;
 
 class ChromedashFeaturelist extends LitElement {
-  static styles = style;
+  static styles = FEATURELIST_CSS;
 
   static get properties() {
     return {
       canEdit: {type: Boolean},
-      signedin: {type: Boolean},
-      loginUrl: {type: String},
+      canApprove: {type: Boolean},
+      signedInUser: {type: String},
       features: {attribute: false}, // Directly edited and accessed in template/features.html
       metadataEl: {attribute: false}, // The metadata component element. Directly edited in template/features.html
       searchEl: {attribute: false}, // The search input element. Directly edited in template/features.html
@@ -29,7 +29,8 @@ class ChromedashFeaturelist extends LitElement {
     this.metadataEl = document.querySelector('chromedash-metadata');
     this.searchEl = document.querySelector('.search input');
     this.canEdit = false;
-    this.signedin = false;
+    this.canApprove = false;
+    this.signedInUser = '';
     this._hasInitialized = false; // Used to check initialization code.
     this._hasScrolledByUser = false; // Used to set the app header state.
     /* When scrollTo(), we also expand the feature. This is the id of the feature. */
@@ -46,13 +47,13 @@ class ChromedashFeaturelist extends LitElement {
      * to be bound to `this`. */
     this._onFeatureToggledBound = this._onFeatureToggled.bind(this);
     this._onStarToggledBound = this._onStarToggled.bind(this);
+    this._onOpenApprovalsBound = this._onOpenApprovals.bind(this);
 
     this._loadData();
   }
 
   async _loadData() {
-    const featureUrl = location.hostname == 'localhost' ?
-      'https://www.chromestatus.com/features_v2.json' : '/features_v2.json';
+    const featureUrl = '/features_v2.json';
 
     try {
       const features = await (await fetch(featureUrl)).json();
@@ -60,11 +61,13 @@ class ChromedashFeaturelist extends LitElement {
 
       features.map((feature) => {
         feature.receivePush = false;
-        feature.milestone = feature.browsers.chrome.desktop ||
-            feature.browsers.chrome.android ||
-            feature.browsers.chrome.webview ||
-            feature.browsers.chrome.ios ||
-            Infinity;
+        if (feature.is_released) {
+          feature.milestone = feature.browsers.chrome.desktop ||
+              feature.browsers.chrome.android ||
+              feature.browsers.chrome.webview ||
+              feature.browsers.chrome.ios ||
+              Infinity;
+        }
       });
       this.features = features;
 
@@ -79,7 +82,7 @@ class ChromedashFeaturelist extends LitElement {
   }
 
   _fireEvent(eventName, detail) {
-    let event = new CustomEvent(eventName, {detail});
+    const event = new CustomEvent(eventName, {detail});
     this.dispatchEvent(event);
   }
 
@@ -155,15 +158,6 @@ class ChromedashFeaturelist extends LitElement {
     const feature = e.detail.feature;
     const open = e.detail.open;
     this._setOpenFeatures(feature.id, open);
-
-    if (history && history.replaceState) {
-      if (open) {
-        history.pushState({id: feature.id}, feature.name, '/features/' + feature.id);
-      } else {
-        const hash = this.searchEl.value ? '#' + this.searchEl.value : '';
-        history.replaceState({id: null}, feature.name, '/features' + hash);
-      }
-    }
   }
 
   _onStarToggled(e) {
@@ -177,6 +171,12 @@ class ChromedashFeaturelist extends LitElement {
       newStarredFeatures.delete(feature.id);
     }
     this.starredFeatures = newStarredFeatures;
+  }
+
+  _onOpenApprovals(e) {
+    const featureId = e.detail.featureId;
+    const dialog = this.shadowRoot.querySelector('chromedash-approvals-dialog');
+    dialog.openWithFeature(featureId);
   }
 
   _filterProperty(propPath, regExp, feature) {
@@ -197,8 +197,8 @@ class ChromedashFeaturelist extends LitElement {
   }
 
   _filterKeyword(regExp, feature) {
-    return (feature.name + '\n' + feature.summary + '\n' + feature.comments)
-      .match(regExp) !== null;
+    return (feature.name + '\n' + feature.summary + '\n' + feature.comments +
+    '\n' + feature.tags).match(regExp) !== null;
   }
 
   _getKeywordFilter(keyword) {
@@ -207,19 +207,25 @@ class ChromedashFeaturelist extends LitElement {
   }
 
   // Directly called from template/features.html
-  filter(val) {
+  filter(val, shouldPushState) {
+    this.searchEl.value = val;
+    const pushOrReplaceState = (
+      history &&
+      (shouldPushState ? history.pushState.bind(history) :
+        history.replaceState.bind(history)));
     // Clear filter if there's no search or if called directly.
     if (!val) {
-      if (history && history.replaceState) {
-        history.replaceState('', document.title, location.pathname + location.search);
+      if (pushOrReplaceState) {
+        pushOrReplaceState({query: ''}, document.title,
+          location.pathname + location.search);
       } else {
         location.hash = '';
       }
       this.filtered = this.features;
     } else {
       val = val.trim();
-      if (history && history.replaceState) {
-        history.replaceState({id: null}, document.title,
+      if (pushOrReplaceState) {
+        pushOrReplaceState({query: val}, document.title,
           '/features#' + encodeURIComponent(val));
       }
 
@@ -341,26 +347,10 @@ class ChromedashFeaturelist extends LitElement {
     }
   }
 
-  /** Scroll to the item in the URL. Otherwise the first 'In development' item */
-  _scrollToInitialPosition() {
-    const lastSlash = location.pathname.lastIndexOf('/');
-    let id;
-    if (lastSlash > 0) {
-      id = parseInt(location.pathname.substring(lastSlash + 1));
-    } else {
-      const milestone = this.metadataEl.implStatuses[this.metadataEl.status.IN_DEVELOPMENT - 1].val;
-      id = this._firstOfMilestone(milestone);
-    }
-    this.scrollToId(id);
-  }
-
   _initialize() {
     this._featuresUnveilMetric.end().log().sendToAnalytics('features', 'unveil');
     this._fireEvent('app-ready');
     this._hasInitialized = true;
-    setTimeout(() => {
-      this._scrollToInitialPosition();
-    }, 300);
   }
 
   _computeMilestoneHidden(feature, features, filtered) {
@@ -400,10 +390,11 @@ class ChromedashFeaturelist extends LitElement {
                  ?starred="${item.starred}"
                  @feature-toggled="${this._onFeatureToggledBound}"
                  @star-toggled="${this._onStarToggledBound}"
+                 @open-approvals-event="${this._onOpenApprovalsBound}"
                  .feature="${item.feature}"
-                 loginurl="${this.loginUrl}"
-                 ?canedit="${this.canEdit}"
-                 ?signedin="${this.signedin}"
+                 ?canEdit="${this.canEdit}"
+                 ?canApprove="${this.canApprove}"
+                 ?signedIn="${this.signedInUser != ''}"
           ></chromedash-feature>
           </div>
         `)}
@@ -411,6 +402,10 @@ class ChromedashFeaturelist extends LitElement {
       ${numOverLimit > 0 ?
         html`<p>To see ${numOverLimit} earlier features, please enter a more specific query.</p>` :
         ''}
+
+      <chromedash-approvals-dialog
+        .signedInUser=${this.signedInUser}
+      ></chromedash-approvals-dialog>
     `;
   }
 }

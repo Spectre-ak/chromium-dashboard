@@ -1,10 +1,8 @@
 // TODO(yangguang): This component is not tested. Data is not available in devserver, so cannot be tested locally.
-import {LitElement, html} from 'lit-element';
-import style from '../css/elements/chromedash-timeline.css';
+import {LitElement, css, html} from 'lit';
+import {SHARED_STYLES} from '../sass/shared-css.js';
 
 class ChromedashTimeline extends LitElement {
-  static styles = style;
-
   static get properties() {
     return {
       type: {type: String},
@@ -13,10 +11,8 @@ class ChromedashTimeline extends LitElement {
       selectedBucketId: {attribute: false},
       showAllHistoricalData: {attribute: false},
       props: {attribute: false}, // Directly edited from metrics/css/timeline/popularity and metrics/feature/timeline/popularity
-      useRemoteData: {attribute: false}, // If true, fetches live data from chromestatus.com instead of localhost.
 
       // Listed in the old code, but seems not used in the component:
-      prod: {type: Boolean},
       timeline: {attribute: false},
     };
   }
@@ -29,7 +25,66 @@ class ChromedashTimeline extends LitElement {
     this.type = '';
     this.view = '';
     this.props = [];
-    this.useRemoteData = false;
+  }
+
+  static get styles() {
+    return [
+      ...SHARED_STYLES,
+      css`
+      :host {
+        display: block;
+        flex: 1;
+        width: var(--max-content-width);
+      }
+
+      :host label {
+        margin-left: 8px;
+        cursor: pointer;
+      }
+
+      #chart {
+        margin-top: 15px;
+        width: 100%;
+        height: 400px;
+        background: var(--table-alternate-background);
+        border-radius: var(--border-radius);
+      }
+
+      #httparchivedata {
+        border: 0;
+        width: 100%;
+        height: 775px;
+      }
+
+      .header_title {
+        margin: 32px 0 15px 0;
+      }
+
+      .description {
+        margin: 15px 0;
+      }
+
+      .callout {
+        padding: var(--content-padding);
+        margin-top: var(--content-padding);
+        background-color: var(--md-yellow-100);
+        border-color: rgba(27,31,35,0.15);
+        line-height: 1.4;
+      }
+
+      #bigquery:empty {
+        display: none;
+      }
+
+      #bigquery {
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: 600;
+        padding: 15px;
+        margin-bottom: 100px;
+        background: var(--table-alternate-background);
+        display: inline-block;
+      }
+    `];
   }
 
   updated(changedProperties) {
@@ -37,7 +92,6 @@ class ChromedashTimeline extends LitElement {
       'selectedBucketId',
       'type',
       'view',
-      'useRemoteData',
       'showAllHistoricalData',
     ];
     if (TRACKING_PROPERTIES.some((property) => changedProperties.has(property))) {
@@ -92,8 +146,8 @@ class ChromedashTimeline extends LitElement {
     datatable.addRows(rowArray);
 
     function aggregateByMonth(date) {
-      let month = date.getMonth();
-      let year = date.getFullYear();
+      const month = date.getMonth();
+      const year = date.getFullYear();
       return new Date(year, month);
     }
 
@@ -105,7 +159,7 @@ class ChromedashTimeline extends LitElement {
         type: 'number',
         label: 'Monthly Average',
       }],
-      [{column: 2, type: 'string'}]
+      [{column: 2, type: 'string'}],
     );
 
     const formatter = new window.google.visualization.NumberFormat({fractionDigits: 6});
@@ -156,9 +210,7 @@ class ChromedashTimeline extends LitElement {
       return;
     }
 
-    const prefix = this.useRemoteData ? 'https://www.chromestatus.com' : '';
-
-    const url = prefix + '/data/timeline/' + this.type + this.view +
+    const url = '/data/timeline/' + this.type + this.view +
               '?bucket_id=' + this.selectedBucketId;
 
     this._renderHTTPArchiveData();
@@ -186,21 +238,21 @@ class ChromedashTimeline extends LitElement {
         featureName = convertToCamelCaseFeatureName(featureName);
       }
       const REPORT_ID = '1M8kXOqPkwYNKjJhtag_nvDNJCpvmw_ri';
-      const dsEmbedUrl = `https://datastudio.google.com/embed/reporting/${REPORT_ID}/page/tc5b?config=%7B"df3":"include%25EE%2580%25800%25EE%2580%2580IN%25EE%2580%2580${featureName}"%7D`;
+      const dsEmbedUrl = `https://datastudio.google.com/embed/reporting/${REPORT_ID}/page/tc5b?params=%7B"df3":"include%25EE%2580%25800%25EE%2580%2580IN%25EE%2580%2580${featureName}"%7D`;
       const hadEl = this.shadowRoot.getElementById('httparchivedata');
       hadEl.src = dsEmbedUrl;
 
       const bigqueryEl = this.shadowRoot.getElementById('bigquery');
-      bigqueryEl.textContent = `#standardSQL  
-SELECT yyyymmdd, client, pct_urls, sample_urls  
-FROM \`httparchive.blink_features.usage\`  
-WHERE feature = '${featureName}'  
+      bigqueryEl.textContent = `#standardSQL
+SELECT yyyymmdd, client, pct_urls, sample_urls
+FROM \`httparchive.blink_features.usage\`
+WHERE feature = '${featureName}'
 ORDER BY yyyymmdd DESC, client`;
     }
   }
 
   render() {
-    return html`  
+    return html`
       <select .value="${this.selectedBucketId}" @change="${this.updateSelectedBucketId}">
         <option disabled value="1">Select a property</option>
         ${this.props.map((prop) => html`
@@ -211,6 +263,8 @@ ORDER BY yyyymmdd DESC, client`;
       <h3 id="usage" class="header_title">Percentage of page loads that use this feature</h3>
       <p class="description">The chart below shows the percentage of page loads (in Chrome) that use
         this feature at least once. Data is across all channels and platforms.
+        Newly added use counters that are not on Chrome stable yet
+        only have data from the Chrome channels they're on.
       </p>
       <div id="chart"></div>
       <p class="callout">
@@ -234,7 +288,7 @@ ORDER BY yyyymmdd DESC, client`;
 
 // Capitalizes the first letter of a word.
 function capitalize(word) {
-  let letters = word.split('');
+  const letters = word.split('');
   letters[0] = letters[0].toUpperCase();
   return letters.join('');
 }

@@ -1,11 +1,14 @@
 @import "../vars";
 
 #feature {
-  @include gradient-bar-bg;
+  background: $card-background;
   border-radius: $default-border-radius;
+  border: $card-border;
+  box-shadow: $card-box-shadow;
+
   box-sizing: border-box;
   word-wrap: break-word;
-  margin-bottom: $content-padding + 100; // padding + height of footer.
+  margin-bottom: $content-padding;
   max-width: $max-content-width;
 }
 
@@ -33,12 +36,6 @@ section {
   label {
     font-weight: 500;
     margin-right: 5px;
-  }
-}
-
-#summary, #comments, #motivation {
-  p {
-    white-space: pre-line;
   }
 }
 

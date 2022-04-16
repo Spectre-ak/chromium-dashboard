@@ -4,11 +4,11 @@
 {% load cache %}
 
 {% block rss %}
-  <link rel="alternate" type="application/rss+xml" href="https://www.chromestatus.com/features.xml" title="All features" />
+  <link rel="alternate" type="application/rss+xml" href="https://chromestatus.com/features.xml" title="All features" />
   {% cache TEMPLATE_CACHE_TIME rssfeed %}
     {% for k,v in categories %}
     <link rel="alternate" type="application/rss+xml"
-          href="https://www.chromestatus.com/features.xml?category={{v}}" title='"{{k}}" features'>
+          href="https://chromestatus.com/features.xml?category={{v}}" title='"{{k}}" features'>
     {% endfor %}
   {% endcache %}
 {% endblock %}
@@ -29,16 +29,15 @@
       <button class="legend-button"><iron-icon icon="chromestatus:help"></iron-icon></button>
     </div>
     <div class="actionlinks">
-      <a id="features-subscribe-button" class="blue-button no-push-notifications" title="Sends a push notification when new features are added."><iron-icon icon="chromestatus:notifications-off"></iron-icon><span>Subscribe</span></a>
       {% if user.can_edit %}
-        <a href="/admin/features/new" class="blue-button" title="Adds a new feature to the site"><iron-icon icon="chromestatus:add-circle-outline"></iron-icon><span>Add new feature</span></a>
+        <a href="/guide/new" class="blue-button" title="Adds a new feature to the site"><iron-icon icon="chromestatus:add-circle-outline"></iron-icon><span>Add new feature</span></a>
       {% endif %}
     </div>
   </div>
 {% endblock %}
 
 {% block drawer %}
-  <h3>Chrome versions</h3>
+  <h3>Filter By</h3>
   {% cache TEMPLATE_CACHE_TIME chromedashmetadata %}
     <!-- Use single quote here. The value is a json string with double quote. -->
     <chromedash-metadata implstatuses='{{IMPLEMENTATION_STATUSES|safe}}'></chromedash-metadata>
@@ -51,14 +50,14 @@
 
 {% block content %}
   <chromedash-featurelist
-    {% if user %}signedin{% endif %}
-    loginurl="{{login.1}}"
-    {% if user.can_edit %}canedit{% endif %}
+    {% if user %} signedInUser="{{user.email}}" {% endif %}
+    {% if user.can_edit %}canEdit{% endif %}
+    {% if user.can_approve %}canApprove{% endif %}
     ></chromedash-featurelist>
 {% endblock %}
 
 {% block js %}
-  <script>
+  <script nonce="{{nonce}}">
     (function() {
       'use strict';
       // Get values from server. used in /static/js/features-page.js
@@ -67,7 +66,6 @@
         webdevs: {{WEB_DEV_VIEWS|safe}},
         standards: {{STANDARDS_VALS|safe}}
       };
-      {% inline_file "/static/js/notifications.min.js" %}
       {% inline_file "/static/js/features-page.min.js" %}
     })();
   </script>

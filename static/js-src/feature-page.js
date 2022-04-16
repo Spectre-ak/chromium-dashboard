@@ -1,13 +1,17 @@
 (function(exports) {
+const toastEl = document.querySelector('chromedash-toast');
+const copyLinkEl = document.querySelector('#copy-link');
+const approvalsIconEl = document.querySelector('#approvals-icon');
+
 // Event handler. Used in feature.html template.
 const subscribeToFeature = (featureId) => {
   const iconEl = document.querySelector('.pushicon');
   if (iconEl.icon === 'chromestatus:star') {
-    StarService.setStar(featureId, false).then(() => {
+    window.csClient.setStar(featureId, false).then(() => {
       iconEl.icon = 'chromestatus:star-border';
     });
   } else {
-    StarService.setStar(featureId, true).then(() => {
+    window.csClient.setStar(featureId, true).then(() => {
       iconEl.icon = 'chromestatus:star';
     });
   }
@@ -32,6 +36,18 @@ const shareFeature = () => {
   }
 };
 
+function copyURLToClipboard() {
+  const url = copyLinkEl.href;
+  navigator.clipboard.writeText(url).then(() => {
+    toastEl.showMessage('Link copied');
+  });
+}
+
+function openApprovalsDialog() {
+  const dialog = document.querySelector('chromedash-approvals-dialog');
+  dialog.openWithFeature(Number(FEATURE_ID));
+}
+
 // Remove loading spinner at page load.
 document.body.classList.remove('loading');
 
@@ -42,8 +58,30 @@ if (navigator.share) {
   });
 }
 
+const shareFeatureEl = document.querySelector('#share-feature');
+if (shareFeatureEl) {
+  shareFeatureEl.addEventListener('click', function(event) {
+    event.preventDefault();
+    shareFeature();
+  });
+}
+
+if (copyLinkEl) {
+  copyLinkEl.addEventListener('click', function(event) {
+    event.preventDefault();
+    copyURLToClipboard();
+  });
+}
+
+if (approvalsIconEl) {
+  approvalsIconEl.addEventListener('click', function(event) {
+    event.preventDefault();
+    openApprovalsDialog();
+  });
+}
+
 // Show the star icon if the user has starred this feature.
-StarService.getStars().then((subscribedFeatures) => {
+window.csClient.getStars().then((subscribedFeatures) => {
   const iconEl = document.querySelector('.pushicon');
   if (subscribedFeatures.includes(Number(FEATURE_ID))) {
     iconEl.icon = 'chromestatus:star';
@@ -52,14 +90,30 @@ StarService.getStars().then((subscribedFeatures) => {
   }
 });
 
+const starWhenSignedInEl = document.querySelector('#star-when-signed-in');
+if (starWhenSignedInEl) {
+  starWhenSignedInEl.addEventListener('click', function(event) {
+    event.preventDefault();
+    subscribeToFeature(Number(FEATURE_ID));
+  });
+}
 
 if (SHOW_TOAST) {
   setTimeout(() => {
-    const toastEl = document.querySelector('chromedash-toast');
     toastEl.showMessage('Your feature was saved! It may take a few minutes to ' +
                       'show up in the main list.', null, null, -1);
   }, 500);
 }
+
+// Open an accordion that was bookmarked open
+if (location.hash) {
+  const targetId = decodeURIComponent(location.hash.substr(1));
+  const targetEl = document.getElementById(targetId);
+  if (targetEl && targetEl.tagName == 'CHROMEDASH-ACCORDION') {
+    targetEl.opened = true;
+  }
+}
+
 
 exports.subscribeToFeature = subscribeToFeature;
 exports.shareFeature = shareFeature;

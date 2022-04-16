@@ -6,20 +6,20 @@
 
 {% block subheader %}
 <div id="subheader">
-  <h2>Whitelist a user</h2>
+  <h2>Application users</h2>
 </div>
 {% endblock %}
 
 {% block content %}
 <section>
 
-<chromedash-userlist action="{{current_path}}"></chromedeash-userlist>
+  <chromedash-userlist></chromedash-userlist>
 
 </section>
 {% endblock %}
 
 {% block js %}
-<script>
+<script nonce="{{nonce}}">
   const el = document.querySelector('chromedash-userlist');
   el.users = {{users|safe}};
 
