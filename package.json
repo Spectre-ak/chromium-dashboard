@@ -43,7 +43,7 @@
     "@babel/register": "^7.17.7",
     "@shoelace-style/shoelace": "^2.0.0-beta.73",
     "acorn": ">=6.4.1",
-    "babel-eslint": "^10.0.3",
+    "babel-eslint": "^10.1.0",
     "color-string": ">=1.9.0",
     "del": "^3.0.0",
     "dot-prop": ">=7.2.0",
